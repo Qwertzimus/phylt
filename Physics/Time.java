@@ -1,5 +1,7 @@
 package Physics;
 
+import org.lwjgl.opengl.Display;
+
 public class Time {
 	public static long startTime=getTime();
 	public static long lastFrameTime=getTime();
@@ -15,6 +17,7 @@ public class Time {
     }
 	public static void updateFPS(){
 		if(getTime()-lastFPSTime>1000){
+			Display.setTitle("FPS: "+fps);
 			fps=0;
 			lastFPSTime=getTime();
 		}

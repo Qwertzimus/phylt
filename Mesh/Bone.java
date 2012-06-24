@@ -22,4 +22,7 @@ public class Bone {
 		this.joints = joints;
 	}
 	
+	public int getJointCount(){
+		return joints.size()-1;
+	}
 }

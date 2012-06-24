@@ -3,27 +3,28 @@ package Main;
 import org.lwjgl.util.vector.*;
 import Physics.*;
 import Mesh.*;
+
 public class Entity {
-	Vector3f position;
-	Vector3f rotation;
-	Vector3f velocity;
-	Vector3f maxVelocity;
+	public Vector3f position;
+	public Vector3f rotation;
+	public Vector3f velocity;
+	public Vector3f maxVelocity;
+	public Vector3f scale;
 	float accelerationSpeed = 1.5f;
 	float friction = 0.9f;
-	float height;
-	float width;
-	float length;
-	Mesh mesh;
-	BoxCollider collider;
+	public Mesh mesh;
+	public BoxCollider collider;
 	Status status;
 
 	public Entity() {
-		mesh=new Mesh();
+		mesh = new Mesh();
 		status = new Status();
 		position = new Vector3f();
 		rotation = new Vector3f();
 		velocity = new Vector3f();
+		scale=new Vector3f(0.01f,0.01f,0.01f);
 		maxVelocity = new Vector3f();
+		collider = new BoxCollider();
 	}
 
 	public BoxCollider getCollider() {
@@ -287,9 +288,9 @@ public class Entity {
 		setPosition(newPosX, newPosY, newPosZ);
 		updateCollider();
 
-		updateCollider();
+		//updateCollider();
 		if (!status.isFlying()) {
-			gravi();
+			//gravi();
 		}
 		status.setMoving(false);
 	}
@@ -348,11 +349,14 @@ public class Entity {
 	}
 
 	public void updateCollider() {
-		collider.setPosition(position.getX() + width, position.getY() + height,
-				position.getZ() + length);
+		collider.setPosition(position.getX() + scale.x, position.getY() + scale.y,
+				position.getZ() + scale.z);
 	}
 
 	public void updateStatus() {
 
+	}
+	public void render(){
+		mesh.render(position,rotation,scale);
 	}
 }

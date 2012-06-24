@@ -90,10 +90,11 @@ public class Camera {
 
 	
 	public void usePerspective() {
+		GL11.glLoadIdentity();
 		GL11.glRotatef(rotation.getX(), 1f, 0f, 0f);
 		GL11.glRotatef(rotation.getY(), 0f, 1f, 0f);
 		GL11.glRotatef(rotation.getZ(), 0f, 0f, 1f);
-		GL11.glTranslatef(position.getX(), position.getY(), position.getZ());
+		GL11.glTranslatef(-position.getX(), -position.getY(), -position.getZ());
 	}
 	
 }

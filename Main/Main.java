@@ -1,6 +1,7 @@
 package Main;
 
 import org.lwjgl.*;
+import java.io.*;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.*;
@@ -8,11 +9,14 @@ import org.lwjgl.util.glu.*;
 import Geometry.*;
 import Physics.*;
 import org.lwjgl.util.vector.*;
+import Mesh.*;
+import java.util.*;
 
 public class Main {
 	boolean isFinished;
 	boolean limitFPS;
 	Player player;
+	List<Entity> entities = new ArrayList<Entity>();
 
 	public Main() {
 		initGL();
@@ -38,36 +42,58 @@ public class Main {
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
 		GLU.gluPerspective(90f,
-				(float) (Display.getWidth() / Display.getHeight()), 0.01f, 100f);
+				(float) (Display.getWidth() / Display.getHeight()), 0.1f, 100f);
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glLoadIdentity();
 	}
 
 	public void run() {
+		Controls.loadControls();
 		player = new Player();
-		Prefab p = new Prefab();
-		p.addGeometry(new Quad());
-		Geometry geometry = p.getGeometry(0);
-		geometry.addVertexPosition(new Vector3f(0, 0, 0));
-		geometry.addVertexPosition(new Vector3f(1, 0, 0));
-		geometry.addVertexPosition(new Vector3f(0, 1, 0));
-		geometry.addVertexPosition(new Vector3f(1, 1, 0));
+		player.setMaxVelocity(new Vector3f(2f, 9.81f, 2f));
 
+		try {
+
+			Meshes.meshes.add(OBJLoader.loadMesh(new File("res/etageres.obj")));
+			Meshes.meshes.get(Meshes.meshes.size() - 1).updateDisplayList();
+			Meshes.meshes.get(Meshes.meshes.size() - 1).name = "etageres";
+			for(int i=0;i<100;i++){
+				entities.add(new Entity());
+				entities.get(i).mesh=Meshes.meshes.get(Meshes.meshes.size()-1);
+				if(i>50){
+				entities.get(i).setPosition(1f*(100-i),0f,0f);
+				}else{
+					entities.get(i).setPosition(0f,0f,1f*i);
+				}
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+
+		// GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 		while (!isFinished) {
 			Display.update();
 			if (Display.isCloseRequested()) {
 				isFinished = true;
 			}
 			if (Display.isActive()) {
+				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT
+						| GL11.GL_DEPTH_BUFFER_BIT);
+				//GL11.glScalef(0.05f, 0.05f, 0.05f);
+				// GL11.glCallList(testListId);
+				//GL11.glScalef(0.01f, 0.01f, 0.01f);
+				//GL11.glTranslatef(10f, 0f, 10f);
+				// GL11.glCallList(bunnyListId);
 				render();
-				p.draw();
+				// p.draw();
 				putput();
-
+				player.update();
 				drawGUI();
 				if (limitFPS) {
 					Display.sync(60);
 				}
 			}
+			//System.out.println(Time.deltaTime);
 			Time.updateFPS();
 			Time.updateDeltaTime();
 		}
@@ -161,7 +187,8 @@ public class Main {
 			}
 			if (Controls.isFlyPressed) {
 				if (!Controls.isFlyPressedLastFrame) {
-					player.getStatus().setFlying(!player.getStatus().isFlying());
+					player.getStatus()
+							.setFlying(!player.getStatus().isFlying());
 				}
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_L)) {
@@ -180,13 +207,13 @@ public class Main {
 			}
 			if (Controls.isLeftClicked) {
 				if (!Controls.isLeftClickedLastFrame) {
-					
+
 				}
 			}
 
 			if (Controls.isRightClicked) {
 				if (!Controls.isRightClickedLastFrame) {
-					
+
 				}
 
 			}
@@ -198,6 +225,7 @@ public class Main {
 				player.setInInventory(!player.isInInventory());
 			}
 		}
+		player.updateCamera();
 	}
 
 	public void drawGUI() {
@@ -206,5 +234,8 @@ public class Main {
 
 	public void render() {
 		player.getCamera().usePerspective();
+		for (Entity entity : entities) {
+			entity.render();
+		}
 	}
 }

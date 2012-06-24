@@ -1,7 +1,15 @@
 package Main;
 
-public class Player extends Entity {
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
+public class Player extends Entity {
+	IntBuffer viewport;
+	IntBuffer selectionBuffer;
+	FloatBuffer modelviewMatrix;
+	FloatBuffer projectionMatrix;
+	FloatBuffer winZ;
+	FloatBuffer pos;
 	Camera camera;
 	boolean isInInventory;
 
@@ -24,6 +32,11 @@ public class Player extends Entity {
 
 	public void setInInventory(boolean isInInventory) {
 		this.isInInventory = isInInventory;
+	}
+
+	public void updateCamera() {
+		camera.setPosition(position.x, position.y + 1f, position.z);
+		camera.setRotation(rotation);
 	}
 
 }

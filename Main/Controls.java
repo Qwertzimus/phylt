@@ -1,11 +1,5 @@
 package Main;
 
-/**
- * Beschreiben Sie hier die Klasse Controls.
- * 
- * @author Sascha 
- * @version 0.01
- */
 import org.lwjgl.input.*;
 public class Controls
 {
