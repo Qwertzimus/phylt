@@ -13,6 +13,7 @@ import Mesh.*;
 import java.util.*;
 
 public class Main {
+	boolean renderMode;
 	boolean isFinished;
 	boolean limitFPS;
 	Player player;
@@ -42,7 +43,7 @@ public class Main {
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
 		GLU.gluPerspective(90f,
-				(float) (Display.getWidth() / Display.getHeight()), 0.1f, 100f);
+				(float) (Display.getWidth() / Display.getHeight()), 0.01f, 100f);
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glLoadIdentity();
 	}
@@ -54,23 +55,28 @@ public class Main {
 
 		try {
 
-			Meshes.meshes.add(OBJLoader.loadMesh(new File("res/etageres.obj")));
+			Meshes.meshes.add(OBJLoader
+					.loadMesh(new File("res/tournevis.obj")));
 			Meshes.meshes.get(Meshes.meshes.size() - 1).updateDisplayList();
-			Meshes.meshes.get(Meshes.meshes.size() - 1).name = "etageres";
-			for(int i=0;i<100;i++){
+			Meshes.meshes.get(Meshes.meshes.size() - 1).name = "";
+			for (int i = 0; i < 1; i++) {
+				System.out.println(" awdawd");
 				entities.add(new Entity());
-				entities.get(i).mesh=Meshes.meshes.get(Meshes.meshes.size()-1);
-				if(i>50){
-				entities.get(i).setPosition(1f*(100-i),0f,0f);
-				}else{
-					entities.get(i).setPosition(0f,0f,1f*i);
+				entities.get(i).mesh = Meshes.meshes
+						.get(Meshes.meshes.size() - 1);
+				if (i > 50) {
+					entities.get(i).setPosition(1f * (100 - i), 0f, 0f);
+				} else {
+					entities.get(i).setPosition(0f, 0f, 1f * i);
 				}
+				System.out.println("vertexCount:"
+						+ (Meshes.meshes.get(i).vertices.size() - 1));
 			}
 		} catch (Exception e) {
 			System.out.println(e);
 		}
 
-		// GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
+		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 		while (!isFinished) {
 			Display.update();
 			if (Display.isCloseRequested()) {
@@ -79,10 +85,10 @@ public class Main {
 			if (Display.isActive()) {
 				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT
 						| GL11.GL_DEPTH_BUFFER_BIT);
-				//GL11.glScalef(0.05f, 0.05f, 0.05f);
+				// GL11.glScalef(0.05f, 0.05f, 0.05f);
 				// GL11.glCallList(testListId);
-				//GL11.glScalef(0.01f, 0.01f, 0.01f);
-				//GL11.glTranslatef(10f, 0f, 10f);
+				// GL11.glScalef(0.01f, 0.01f, 0.01f);
+				// GL11.glTranslatef(10f, 0f, 10f);
 				// GL11.glCallList(bunnyListId);
 				render();
 				// p.draw();
@@ -93,7 +99,7 @@ public class Main {
 					Display.sync(60);
 				}
 			}
-			//System.out.println(Time.deltaTime);
+			// System.out.println(Time.deltaTime);
 			Time.updateFPS();
 			Time.updateDeltaTime();
 		}
@@ -174,6 +180,19 @@ public class Main {
 						Display.setFullscreen(!Display.isFullscreen());
 					} catch (Exception e) {
 
+					}
+				}
+			}
+			if (Controls.isPolygonModePressed) {
+				if (!Controls.isPolygonModePressedLastFrame) {
+					if (!renderMode) {
+						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK,
+								GL11.GL_FILL);
+						renderMode = true;
+					} else {
+						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK,
+								GL11.GL_LINE);
+						renderMode = false;
 					}
 				}
 			}

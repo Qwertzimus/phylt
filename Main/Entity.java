@@ -22,7 +22,7 @@ public class Entity {
 		position = new Vector3f();
 		rotation = new Vector3f();
 		velocity = new Vector3f();
-		scale=new Vector3f(0.01f,0.01f,0.01f);
+		scale=new Vector3f(0.1f,0.1f,0.1f);
 		maxVelocity = new Vector3f();
 		collider = new BoxCollider();
 	}
