@@ -56,7 +56,7 @@ public class Main {
 		try {
 
 			Meshes.meshes.add(OBJLoader
-					.loadMesh(new File("res/tournevis.obj")));
+					.loadMesh(new File("res/bunny.obj")));
 			Meshes.meshes.get(Meshes.meshes.size() - 1).updateDisplayList();
 			Meshes.meshes.get(Meshes.meshes.size() - 1).name = "";
 			for (int i = 0; i < 1; i++) {
