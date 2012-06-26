@@ -18,6 +18,8 @@ public class Main {
 	boolean limitFPS;
 	Player player;
 	List<Entity> entities = new ArrayList<Entity>();
+	public static final String VERTEX_SHADER_LOCATION = "shaders/testshader01.vert";
+	public static final String FRAGMENT_SHADER_LOCATION = "shaders/testshader01.frag";
 
 	public Main() {
 		initGL();
@@ -37,8 +39,11 @@ public class Main {
 		} catch (Exception e) {
 			System.out.println(e);
 		}
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glCullFace(GL11.GL_BACK);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
@@ -55,8 +60,7 @@ public class Main {
 
 		try {
 
-			Meshes.meshes.add(OBJLoader
-					.loadMesh(new File("res/bunny.obj")));
+			Meshes.meshes.add(OBJLoader.loadMesh(new File("res/bunny.obj")));
 			Meshes.meshes.get(Meshes.meshes.size() - 1).updateDisplayList();
 			Meshes.meshes.get(Meshes.meshes.size() - 1).name = "";
 			for (int i = 0; i < 1; i++) {
@@ -186,12 +190,10 @@ public class Main {
 			if (Controls.isPolygonModePressed) {
 				if (!Controls.isPolygonModePressedLastFrame) {
 					if (!renderMode) {
-						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK,
-								GL11.GL_FILL);
+						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
 						renderMode = true;
 					} else {
-						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK,
-								GL11.GL_LINE);
+						GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 						renderMode = false;
 					}
 				}
