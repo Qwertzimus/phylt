@@ -115,7 +115,7 @@ public class Main {
 		}
 		ARBShaderObjects.glShaderSourceARB(fragmentShaderId, fragCode);
 		ARBShaderObjects.glCompileShaderARB(fragmentShaderId);
-
+		System.out.println(ARBShaderObjects.glGetInfoLogARB(fragmentShaderId, 99999));
 	}
 
 	public void run() {
