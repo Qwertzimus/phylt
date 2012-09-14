@@ -82,6 +82,7 @@ public class World implements IWorld {
 		for(int i=0;i<chunks.length;i++){
 			for(int k=0;k<chunks.length;k++){
 				chunks[k][i].getLightMap().updateLightBuffer();
+				chunks[k][i].getLightMap().bindBuffer();
 			}
 		}
 		if (!isServer) {

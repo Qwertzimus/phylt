@@ -459,6 +459,7 @@ public class Chunk implements renderAble {
 	}
 	public void draw() {
 		if (Main.world.isFirstLoaded||isReady) {
+			if(lightMap.getLightValues()==null)System.out.println("notLOADED");
 			// GL11.glTranslatef(-position.x, -position.y, 0);
 
 			/*
