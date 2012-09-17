@@ -13,7 +13,7 @@ public class Light implements LightSource {
 	Vector2f position, oldPosition;
 	List<Block> changedBlocks;
 	List<Float> changedBlocksLightValue;
-	boolean forceUpdate, hasChanged,thread;
+	boolean forceUpdate, hasChanged;
 
 	public Light() {
 		position = new Vector2f();
@@ -145,7 +145,8 @@ public class Light implements LightSource {
 				} catch (Exception e) {
 					System.out.println("lightUpdate" + e);
 				}
-				if (thread == false) {
+				updateLightMaps(chunksToUpdate);
+				/*if (thread == false) {
 					thread=true;
 					new Thread(new Runnable() {
 						public void run() {
@@ -153,7 +154,7 @@ public class Light implements LightSource {
 							thread=false;
 						}
 					}).start();
-				}
+				}*/
 				setHasChanged(false);
 				oldPosition.set(position);
 

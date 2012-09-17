@@ -34,20 +34,7 @@ public class Text {
 	}
 
 	public static void drawTextOnDisplay(String s) {
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glLoadIdentity();
-		GLU.gluOrtho2D(0f, Display.getWidth(), Display.getHeight(), 0f);
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glLoadIdentity();
-
-		font.drawString(0, 0, s);
-
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glLoadIdentity();
-		GLU.gluOrtho2D(0.0f, (float) Display.getWidth(), (float) 0,
-				Display.getHeight());
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+		drawTextOnDisplay(s, 0, 0);
 	}
 
 	public static void drawTextOnDisplay(String s, int x, int y) {

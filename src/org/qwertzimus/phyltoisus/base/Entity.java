@@ -20,6 +20,8 @@ import org.qwertzimus.phyltoisus.gui.Animation;
 import org.qwertzimus.phyltoisus.gui.Textures;
 import org.qwertzimus.phyltoisus.network.ObjectNetworkReference;
 import org.qwertzimus.phyltoisus.physic.BoxCollider2D;
+import org.qwertzimus.phyltoisus.physic.Gravity;
+import org.qwertzimus.phyltoisus.physic.Force;
 import org.qwertzimus.phyltoisus.physic.Time;
 import org.qwertzimus.phyltoisus.world.*;
 
@@ -46,16 +48,24 @@ import org.qwertzimus.phyltoisus.world.*;
  19.:
  20.:
  */
-public class Entity implements renderAble {
+public class Entity implements Renderable {
+	private List<Force> forces = new ArrayList<Force>(); // A list of all the forces
+	private Force gravity = Gravity.getGravity(); // The Gravity Force
+	private Force fly = new Force(new Vector2f(0, 5f), false); // The force upwards when flying
+	private Force hover = new Force(new Vector2f(0, 8f), false); // The force upwards when falling (lower than gravity)
+	private Force jumpFlyMode = new Force(new Vector2f(0, 2f*70), false);
+	private Force jump = new Force(new Vector2f(0, 10f*70), false);
+	
 	Vector2f position;
 	Vector2f velocity;
 	Vector2f rotation;
 	Rectangle collider;
 	Chunk inChunk;
-	float accelerationY = 92f;
-	float accelerationX = 32f;
+	float accelerationY = 3f;
+	float accelerationX = 1f;
 	float fraction = 0.95f;
-	float maxVelocity = 512f;
+	float maxVelocityX = 3f;
+	float maxVelocityY = 6f;
 	boolean isAcceleratingX, isAcceleratingY, isOnGround, isFinished,
 			isColliding, collR, collL, collU, collD, isBouncy, isBurning, look,
 			hasAnimationStartTime, canFly, canUseMagic, isAlive, isAnimated,
@@ -76,6 +86,12 @@ public class Entity implements renderAble {
 	public static FloatBuffer lightValues;
 
 	public Entity() {
+		this.forces.add(this.gravity);
+		this.forces.add(this.fly);
+		this.forces.add(this.hover);
+		this.forces.add(this.jump);
+		this.forces.add(this.jumpFlyMode);
+		
 		vertexBufferId = -1;
 		textureBufferId = -1;
 		position = new Vector2f();
@@ -94,12 +110,20 @@ public class Entity implements renderAble {
 		this.inChunk = inChunk;
 	}
 
-	public float getMaxVelocity() {
-		return maxVelocity;
+	public float getMaxVelocityX() {
+		return maxVelocityX;
+	}
+	
+	public float getMaxVelocityY() {
+		return maxVelocityY;
 	}
 
-	public void setMaxVelocity(float maxVelocity) {
-		this.maxVelocity = maxVelocity;
+	public void setMaxVelocityX(float maxVelocityX) {
+		this.maxVelocityX = maxVelocityX;
+	}
+
+	public void setMaxVelocityY(float maxVelocityY) {
+		this.maxVelocityY = maxVelocityY;
 	}
 
 	public boolean isFinished() {
@@ -456,7 +480,9 @@ public class Entity implements renderAble {
 	}
 
 	public void moveUp() {
-		velocity.y += accelerationY * Time.deltaTime / 1000f;
+		if (!canFly) return;
+		//velocity.y += 2700 * Time.deltaTime / 1000f;
+		fly.setEnabled(true);
 		isAcceleratingY = true;
 		isFlying = true;
 	}
@@ -470,7 +496,13 @@ public class Entity implements renderAble {
 	public synchronized void jump() {
 		// System.out.println(isOnGround+" "+jumpCounter);
 		if (isOnGround || jumpCounter < maxJumps && velocity.y < 1) {
-			velocity.setY(550);
+			if (canFly) {
+				this.velocity.y = 0;
+				this.jumpFlyMode.setEnabled(true);
+			} else {
+				this.velocity.y = 0;
+				this.jump.setEnabled(true);
+			}
 			jumpCounter++;
 		}
 	}
@@ -670,15 +702,92 @@ public class Entity implements renderAble {
 		if(c!=0)System.out.println(c-t);
 	}
 
-	public synchronized void update() {
+	public synchronized void update(float dt) {
 		// TODO- anti-clipping measures
 		adjustVelocity();
 		float oldX = position.x;
 		float oldY = position.y;
 		float finalX = oldX;
 		float finalY = oldY;
+		
+		loadAnimations();
+		
+		inChunk = Main.world.getChunk(getChunkX(), getChunkY());
+		if (inChunk != null) {
+			this.hover.setEnabled(canFly);
+			for (Force force : this.forces) {
+				if (!force.isEnabled()) continue;
+				this.velocity.x += force.getDirection().x*dt;
+				this.velocity.y += force.getDirection().y*dt;
+			}
+			
+			finalX = this.position.x + this.velocity.x;
+			finalY = this.position.y + this.velocity.y;
+			
+			inChunk = Main.world.getChunk(getChunkX(new Vector2f(oldX,
+					finalY)), getChunkY(new Vector2f(oldX, finalY)));
+			updateCollider(new Vector2f(oldX, finalY));
+			
+			if (hasWorldCollisionUp(new Vector2f(finalX, finalY))) {
+				finalY = oldY;
+				this.velocity.y = 0;
+			}
+			
+			inChunk = Main.world.getChunk(getChunkX(new Vector2f(oldX,
+					finalY)), getChunkY(new Vector2f(oldX, finalY)));
+			updateCollider(new Vector2f(oldX, finalY));
+			
+			if (hasWorldCollisionDown(new Vector2f(oldX, finalY))) {
+				finalY = oldY;
+				this.velocity.y = 0;
+				
+				isOnGround = true;
+				if (!isInHoverMode)
+					isFlying = false;
+			} else {
+				isOnGround = false;
+				if (isInHoverMode)
+					isFlying = true;
+			}
+			
+			inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
+					oldY)), getChunkY(new Vector2f(finalX, oldY)));
+			updateCollider(new Vector2f(finalX, oldY));
+			if (hasWorldCollisionLeft(new Vector2f(finalX, oldY))) {
+				finalX = oldX;
+				this.velocity.x = 0;
+			}
+			
+			inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
+					oldY)), getChunkY(new Vector2f(finalX, oldY)));
+			updateCollider(new Vector2f(finalX, oldY));
 
-		try {
+			if (hasWorldCollisionRight(new Vector2f(finalX, oldY))) {
+				finalX = oldX;
+				this.velocity.x = 0;
+			}
+			
+			setPosition(finalX, finalY);
+			
+			inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
+					finalY)), getChunkY(new Vector2f(finalX, finalY)));
+			updateCollider(new Vector2f(finalX, finalY));
+			
+			if (this.isOnGround && !this.isAcceleratingX) {
+				this.velocity.x = this.velocity.x * this.fraction;
+			}
+			this.isAcceleratingX = false;
+			this.fly.setEnabled(false);
+			this.jump.setEnabled(false);
+			this.jumpFlyMode.setEnabled(false);
+			
+			statusUpdate();
+			
+			animate1();
+		}
+
+
+		/*try {
 			inChunk = Main.world.getChunk(getChunkX(), getChunkY());
 			if (inChunk != null) {
 				
@@ -774,7 +883,7 @@ public class Entity implements renderAble {
 			position.x = oldX;
 			position.y = oldY;
 			// System.out.println(e);
-		}
+		}*/
 	}
 
 	public float getFraction() {
@@ -847,15 +956,15 @@ public class Entity implements renderAble {
 	}
 
 	public synchronized void adjustVelocity() {
-		if (velocity.getX() > maxVelocity) {
-			velocity.setX(maxVelocity);
-		} else if (velocity.getX() < -maxVelocity) {
-			velocity.setX(-maxVelocity);
+		if (velocity.getX() > maxVelocityX) {
+			velocity.setX(maxVelocityX);
+		} else if (velocity.getX() < -maxVelocityX) {
+			velocity.setX(-maxVelocityX);
 		}
-		if (velocity.getY() > maxVelocity) {
-			velocity.setY(maxVelocity);
-		} else if (velocity.getY() < -maxVelocity) {
-			velocity.setY(-maxVelocity);
+		if (velocity.getY() > maxVelocityY) {
+			velocity.setY(maxVelocityY);
+		} else if (velocity.getY() < -maxVelocityY) {
+			velocity.setY(-maxVelocityY);
 		}
 		/*
 		 * if(velocity.x<0.001&&velocity.x>-0.001) velocity.x=0; else
@@ -874,7 +983,7 @@ public class Entity implements renderAble {
 	}
 
 	public void statusUpdate() {
-		if (velocity.getX() < 1 && velocity.getX() > -1) {
+		if (velocity.getX() < 0.1 && velocity.getX() > -0.1) {
 			isStanding = true;
 		} else {
 			isStanding = false;
@@ -882,10 +991,6 @@ public class Entity implements renderAble {
 		if (isOnGround) {
 			jumpCounter = 0;
 		}
-	}
-
-	public void gravi() {
-		velocity.y -= 9.81f * (Time.deltaTime / 1000f) * 20;
 	}
 
 	public Rectangle getCollider() {

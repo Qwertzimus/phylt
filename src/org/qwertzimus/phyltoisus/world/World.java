@@ -17,7 +17,7 @@ import org.qwertzimus.phyltoisus.base.*;
 
 public class World implements IWorld {
 	HashMap<Integer, Chunk[][]> chunkE;
-	List<renderAble> objects;
+	List<Renderable> objects;
 	List<Entity> entities;
 	List<EntityController> entityController;
 	FloatBuffer diffuse, ambient;
@@ -32,7 +32,7 @@ public class World implements IWorld {
 	public static boolean isServer = false;
 
 	public World() {
-		objects = new ArrayList<renderAble>();
+		objects = new ArrayList<Renderable>();
 		entities = new ArrayList<Entity>();
 		entityController = new ArrayList<EntityController>();
 		lights = new ArrayList<LightSource>();
@@ -87,18 +87,7 @@ public class World implements IWorld {
 		}
 		if (!isServer) {
 			// final Chunk[][] chunkA=chunks;
-			new Thread() {
-				public void run() {
-					while (true) {
-						try {
-							updateLights(0, lights.size());
-							sleep(1);
-						} catch (Exception e) {
-							System.out.println(e);
-						}
-					}
-				}
-			}.start();
+			
 
 		}
 		System.out.println("initalised");
@@ -159,11 +148,11 @@ public class World implements IWorld {
 		chunks = chunks;
 	}
 
-	public List<renderAble> getObjects() {
+	public List<Renderable> getObjects() {
 		return objects;
 	}
 
-	public void setObjects(List<renderAble> objects) {
+	public void setObjects(List<Renderable> objects) {
 		this.objects = objects;
 	}
 
@@ -263,10 +252,11 @@ public class World implements IWorld {
 		entityController.remove(e);
 	}
 
-	public void update() {
+	public void update(float dt) {
 		for (Entity e : entities) {
-			e.update();
+			e.update(dt);
 		}
+		updateLights(0, lights.size());
 	}
 
 	public void updateAIs() {
@@ -276,6 +266,7 @@ public class World implements IWorld {
 	}
 
 	// 50176 49152
+	// TODO	This is being called a lot and takes a lot of resources too;
 	public synchronized void loadWorldParts(Entity e, int id) {
 		Chunk[][] chunks = chunkE.get(id);
 		int diffX = 0, diffY = 0;
@@ -406,9 +397,9 @@ public class World implements IWorld {
 		ARBShaderObjects.glUseProgramObjectARB(Main.shaderId);
 		int loc = ARBShaderObjects.glGetUniformLocationARB(Main.shaderId,
 				"texure");
-		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+//		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, Textures.texture1.getTextureID());
-		ARBShaderObjects.glUniform1iARB(loc, GL13.GL_ACTIVE_TEXTURE);
+//		ARBShaderObjects.glUniform1iARB(loc, GL13.GL_ACTIVE_TEXTURE);
 		light = ARBShaderObjects.glGetUniformLocationARB(Main.shaderId,
 				"lightValue");
 

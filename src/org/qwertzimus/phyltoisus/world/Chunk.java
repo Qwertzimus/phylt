@@ -10,14 +10,14 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
 import org.qwertzimus.phyltoisus.base.Entity;
 import org.qwertzimus.phyltoisus.base.Main;
-import org.qwertzimus.phyltoisus.base.renderAble;
+import org.qwertzimus.phyltoisus.base.Renderable;
 import org.lwjgl.opengl.*;
 
 /*		1
  * 	0		2
  * 		3
  */
-public class Chunk implements renderAble {
+public class Chunk implements Renderable {
 	Vector2f position;
 	Vector2f rotation;
 	Block[][][] block;

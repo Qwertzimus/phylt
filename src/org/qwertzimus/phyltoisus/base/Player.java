@@ -9,11 +9,12 @@ public class Player extends Entity {
 
 	public Player() {
 		super();
-		inventory=new Inventory();
+		inventory = new Inventory();
 	}
 
 	@Override
 	public void draw() {
+		//System.out.println(this.position.x + ", " + this.position.y);
 		if (isReady) {
 			GL11.glPushMatrix();
 			GL11.glTranslatef((int) position.x, (int) position.y, 0);
@@ -36,11 +37,11 @@ public class Player extends Entity {
 					ARBVertexBufferObject.GL_ARRAY_BUFFER_ARB, textureBufferId);
 			GL11.glTexCoordPointer(2, GL11.GL_FLOAT, 0, 0);
 			if (inChunk != null) {
-//				ARBShaderObjects.glUniform1fARB(
-//						Main.baseLightValueLoc,
-//						inChunk.getBlock((getBlockX() - getChunkX()) / 16,
-//								(getBlockY() - getChunkY()) / 16, 0)
-//								.getLightValue());
+				ARBShaderObjects.glUniform1fARB(
+						Main.baseLightValueLoc,
+						inChunk.getBlock((getBlockX() - getChunkX()) / 16,
+								(getBlockY() - getChunkY()) / 16, 0)
+								.getLightValue());
 				
 				ARBShaderObjects.glUniform1fARB(
 						Main.baseLightValueLoc,

@@ -43,7 +43,7 @@ public class Main {
 		try {
 			Display.create();
 			// Display.makeCurrent();
-			Display.setDisplayMode(new DisplayMode(1024, 768));
+			Display.setDisplayMode(new DisplayMode(800, 600));
 			// Display.setVSyncEnabled(true);
 		} catch (Exception e) {
 			System.out.println(e);
@@ -54,7 +54,7 @@ public class Main {
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glViewport(0, 0, Display.getWidth(), Display.getHeight());
-		GLU.gluOrtho2D(0, (float) 1024, 0, (float) 768);
+		GLU.gluOrtho2D(0, (float) 800, 0, (float) 600);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -176,6 +176,7 @@ public class Main {
 		player.setSize(12);
 		player.setWidth(48);
 		player.setHeight(48);
+		player.setMaxJumps(3);
 		player.setOffset(12, 16, -12, -16); // rd
 		// player.setOffset(12, 4, -12, -16); //pp
 		player.setPosition(200, 256);
@@ -243,7 +244,6 @@ public class Main {
 		};
 		worldUpdater.start();
 		while (isRunning) {
-
 			Display.update();
 
 			if (Display.isCloseRequested()) {
@@ -266,7 +266,7 @@ public class Main {
 				if (World.isFirstLoaded) {
 
 					putput();
-					world.update();
+					world.update(Time.deltaTime/1000.0f);
 					world.updateAIs();
 					player.usePerspective();
 					glBindTexture(GL_TEXTURE_2D, 0);
@@ -305,10 +305,17 @@ public class Main {
 		Display.destroy();
 		// System.exit(0);
 	}
-
+	private static long lastFPSUpdate = 0;
+	private static int lastFPS = 0;
 	public void updateGUI(){
 		if (world.isFirstLoaded) {
 			GUI.updateStats();
+			long t = System.currentTimeMillis();
+			if (lastFPSUpdate+1000 < t) {
+				lastFPS = Time.fps;
+				lastFPSUpdate = t;
+			}
+			Text.drawTextOnDisplay("FPS: " + lastFPS);
 		}
 	}
 	public void drawGUI() {

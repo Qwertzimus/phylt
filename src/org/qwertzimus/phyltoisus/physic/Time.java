@@ -27,8 +27,6 @@ public class Time {
 	public static void updateFPS() {
 		deltaTime=(int)(getTime()-lastFrame);
 		if (getTime() - lastFPS > 1000) {
-			// Display.setTitle("FPS: " + fps);
-			System.out.println("FPS: " + fps);
 			fps = 0;
 			lastFPS += 1000;
 		}
