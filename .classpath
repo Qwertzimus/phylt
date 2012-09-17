@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="libs/AppleJavaExtensions.jar"/>
+	<classpathentry kind="lib" path="libs/asm-debug-all.jar"/>
+	<classpathentry kind="lib" path="libs/jinput.jar"/>
+	<classpathentry kind="lib" path="libs/kryonet-1.04-all.jar"/>
+	<classpathentry kind="lib" path="libs/lwjgl_test.jar"/>
+	<classpathentry kind="lib" path="libs/lwjgl_util_applet.jar"/>
+	<classpathentry kind="lib" path="libs/lwjgl_util.jar"/>
+	<classpathentry kind="lib" path="libs/lwjgl-debug.jar"/>
+	<classpathentry kind="lib" path="libs/lwjgl.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="phylt/libs/natives/windows"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/lzma.jar"/>
+	<classpathentry kind="lib" path="libs/slick-util.jar"/>
+	<classpathentry kind="lib" path="libs/slick.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
