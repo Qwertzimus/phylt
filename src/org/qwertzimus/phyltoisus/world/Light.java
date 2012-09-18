@@ -11,7 +11,7 @@ public class Light implements LightSource {
 	float lightIntensity;
 	int range;
 	Vector2f position, oldPosition;
-	List<Block> changedBlocks;
+	List<Block> changedBlocks,blocks;
 	List<Float> changedBlocksLightValue;
 	boolean forceUpdate, hasChanged;
 
@@ -19,6 +19,7 @@ public class Light implements LightSource {
 		position = new Vector2f();
 		oldPosition = new Vector2f();
 		changedBlocks = new ArrayList<Block>();
+		blocks = new ArrayList<Block>();
 		changedBlocksLightValue = new ArrayList<Float>();
 	}
 
@@ -98,6 +99,17 @@ public class Light implements LightSource {
 		return position;
 	}
 
+	public synchronized void updateAffectedBlocks(){
+		final List<Chunk> chunksToUpdate = new ArrayList<Chunk>();
+		for(Block b:blocks){
+			b.updateLightValue(World.getLights());
+			if (!chunksToUpdate.contains(b.getChunk())) {
+				chunksToUpdate.add(b.getChunk());
+				b.getChunk().setUpdateLightMap(true);
+			}
+		}
+		updateLightMaps(chunksToUpdate);
+	}
 	@Override
 	public synchronized void updateBlocks() {
 		if (Main.world.isFirstLoaded) {
@@ -195,6 +207,27 @@ public class Light implements LightSource {
 	@Override
 	public boolean forceUpdate() {
 		return forceUpdate;
+	}
+
+	public float getLightValue(Block b) {
+		float lI = lightIntensity
+				- (Math.abs((b.getPosition().x - position.x) / 16)
+						* Math.abs((b.getPosition().x - position.x) / 16) + Math
+						.abs((b.getPosition().y - position.y) / 16)
+						* Math.abs((b.getPosition().y - position.y) / 16))
+				/ 100;
+		return lI;
+	}
+
+	@Override
+	public synchronized void addBlock(Block b) {
+		blocks.add(b);
+		
+	}
+
+	@Override
+	public synchronized  void removeBlock(Block b) {
+		blocks.remove(b);
 	}
 
 }

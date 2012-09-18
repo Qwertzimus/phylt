@@ -1,2 +1,3 @@
+The block textures are taken from the yogscraft minecraft texture pack and the original texture pack which can be found here http://www.minecraftforum.net/topic/501161-16x173-yogscraft-the-open-source-yogscast-themed-texture-pack/  
 Allmost all images are taken from desktop pony and belong to their respective owner
-(if you want to be named in the credits(or we forgot to give you credits) please contact the team )
+(if you want to be named in the credits and you invested great efforts into the project(or we forgot to give you propper credits) please contact the team )

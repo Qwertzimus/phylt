@@ -25,7 +25,7 @@ public class Chunk implements Renderable {
 	int vertexBufferId, textureBufferId;
 	boolean isReady, shouldBeSaved, updateLightMap, rebind,needsBufferUpdate;
 	int biomeType;
-	Chunk chu[];
+	Chunk chu[]; //Chunks which surround this Chunk
 	Entity belongsTo;
 	LightMap lightMap;
 

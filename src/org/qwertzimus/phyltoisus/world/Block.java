@@ -1,14 +1,18 @@
 package org.qwertzimus.phyltoisus.world;
 
+import java.util.List;
+
 import org.lwjgl.util.vector.Vector2f;
+import org.qwertzimus.phyltoisus.base.LightSource;
+import org.qwertzimus.phyltoisus.base.Main;
 import org.qwertzimus.phyltoisus.gui.Textures;
 
-public class Block{
+public class Block {
 	boolean isSolid;
 	int id;
 	float lightValue;
 	Chunk inChunk = null;
-	Light l = null;
+	List<LightSource> lights;
 
 	public Block(Chunk c) {
 		id = 5;
@@ -19,14 +23,26 @@ public class Block{
 		inChunk = c;
 		this.id = id;
 	}
-
+	
 	public void setId(int id) {
 		this.id = id;
 		updateStatus();
-		if(l!=null){
-			l.setHasChanged(true);
-		}
+		updateLightValue(World.getLights());
 		inChunk.markDirty();
+	}
+
+	
+	public synchronized void updateLightValue(List<LightSource> lights) {
+		float lightValue=0;
+		float curLightValue=0;
+		for (LightSource ls : lights) {
+			if((curLightValue=ls.getLightValue(this))>lightValue){
+				ls.addBlock(this);
+				lightValue=curLightValue;
+			}
+		}
+		setLightValue(lightValue);
+		inChunk.setUpdateLightMap(true);
 	}
 
 	public synchronized void setLightValue(float lightv) {
@@ -56,10 +72,10 @@ public class Block{
 			isSolid = false;
 		}
 		if (inChunk != null) {
+			updateLightValue(World.getLights());
 			inChunk.markDirty();
-			inChunk.setUpdateLightMap(true);
+
 		}
-		
 	}
 
 	public Vector2f getPosition() {
@@ -75,12 +91,16 @@ public class Block{
 		this.isSolid = isSolid;
 	}
 
-	public void setLight(Light light) {
-		l=light;
+	public List<LightSource> getLights() {
+		return lights;
 	}
 
-	public Light getLight() {
-		return l;
+	public void setLights(List<LightSource> lights) {
+		this.lights = lights;
+	}
+
+	public Chunk getInChunk() {
+		return inChunk;
 	}
 
 	public static float[] getVertexCoordinates(Vector2f position) {

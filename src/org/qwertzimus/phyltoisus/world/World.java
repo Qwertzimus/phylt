@@ -30,8 +30,9 @@ public class World implements IWorld {
 	public static int light;
 	public static List<LightSource> lights;
 	public static boolean isServer = false;
-
+	public static LightHandler lightHandler;
 	public World() {
+		
 		objects = new ArrayList<Renderable>();
 		entities = new ArrayList<Entity>();
 		entityController = new ArrayList<EntityController>();
@@ -41,6 +42,7 @@ public class World implements IWorld {
 		if (!f.exists()) {
 			f.mkdirs();
 		}
+		lightHandler=new LightHandler(lights);
 		System.out.println(worldSeed);
 	}
 
@@ -86,9 +88,7 @@ public class World implements IWorld {
 			}
 		}
 		if (!isServer) {
-			// final Chunk[][] chunkA=chunks;
-			
-
+			lightHandler.start();
 		}
 		System.out.println("initalised");
 	}
