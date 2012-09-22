@@ -26,7 +26,7 @@ import org.qwertzimus.phyltoisus.physic.Time;
 import org.qwertzimus.phyltoisus.world.*;
 
 public class Main {
-	public static boolean isRunning, isLoaded;
+	public static boolean isRunning, isLoaded, showTimes;
 	public static World world;
 	public static Player player;
 	public static int xMousePosition, yMousePosition, shaderId, vertexShaderId,
@@ -115,7 +115,8 @@ public class Main {
 		}
 		ARBShaderObjects.glShaderSourceARB(fragmentShaderId, fragCode);
 		ARBShaderObjects.glCompileShaderARB(fragmentShaderId);
-		System.out.println(ARBShaderObjects.glGetInfoLogARB(fragmentShaderId, 99999));
+		System.out.println(ARBShaderObjects.glGetInfoLogARB(fragmentShaderId,
+				99999));
 	}
 
 	public void run() {
@@ -133,14 +134,14 @@ public class Main {
 
 		if (ARBShaderObjects.glGetObjectParameteriARB(shaderId,
 				ARBShaderObjects.GL_OBJECT_LINK_STATUS_ARB) == GL11.GL_FALSE) {
-			System.out.println("buagduawgdu");
+			System.out.println("shader link error");
 			return;
 		}
 		ARBShaderObjects.glValidateProgramARB(shaderId);
 
 		if (ARBShaderObjects.glGetObjectParameteriARB(shaderId,
 				ARBShaderObjects.GL_OBJECT_VALIDATE_STATUS_ARB) == GL11.GL_FALSE) {
-			System.out.println("buagduawgdu");
+			System.out.println("bshader validation error");
 			return;
 		}
 		lightValueLoc = ARBVertexShader.glGetAttribLocationARB(shaderId,
@@ -207,18 +208,27 @@ public class Main {
 		player.setAnimation(Textures.animations.get("Rainbow Dash"));
 		world.registerEntity(player);
 		System.out.println(System.currentTimeMillis() - t + "ms");
-		/*
-		 * for (int i = 0; i < 100; i++) { Entity ent = new Entity();
-		 * ent.setCanFly(true); ent.setSize(12); ent.setWidth(48);
-		 * ent.setHeight(48); ent.setOffset(12, 4, -12, -16);
-		 * ent.setPosition(200, 512); ent.updateBuffer(); ent.setAnimated(true);
-		 * ent.setAnimation(Textures.animations.get("Pinkie Pie"));
-		 * EntityController entC = new EntityController(ent); // Light l1=new
-		 * Light(); // l1.setPosition(ent.getPosition()); //
-		 * l1.setLightIntensity(1f); // l1.setRange(10); //
-		 * world.lights.add(l1); // entC.setTarget(player); entC.start();
-		 * world.registerEntity(ent); world.registerEntityController(entC); }
-		 */
+//		for (int i = 0; i < 100; i++) {
+//			Entity ent = new Entity();
+//			ent.setCanFly(true);
+//			ent.setSize(12);
+//			ent.setWidth(48);
+//			ent.setHeight(48);
+//			ent.setOffset(12, 4, -12, -16);
+//			ent.setPosition(200, 512);
+//			ent.updateBuffer();
+//			ent.setAnimated(true);
+//			ent.setAnimation(Textures.animations.get("Rainbow Dash"));
+//			EntityController entC = new EntityController(ent); // Light l1=new
+//			// Light(); // l1.setPosition(ent.getPosition()); //
+//			// l1.setLightIntensity(1f); // l1.setRange(10); //
+//			// world.lights.add(l1);
+//			entC.setTarget(player);
+//			entC.start();
+//			world.registerEntity(ent);
+//			world.registerEntityController(entC);
+//		}
+
 		Thread worldUpdater = new Thread() {
 			public void run() {
 				while (isRunning) {
@@ -226,7 +236,7 @@ public class Main {
 						world.loadWorldParts(player, 0);
 						World.isFirstLoaded = true;
 
-						sleep(World.worldUpdaterSleepTime);
+						sleep(world.worldUpdaterSleepTime);
 					} catch (Exception e) {
 						System.out.println(e);
 					}
@@ -243,6 +253,7 @@ public class Main {
 
 		};
 		worldUpdater.start();
+
 		while (isRunning) {
 			Display.update();
 
@@ -264,14 +275,24 @@ public class Main {
 				}
 
 				if (World.isFirstLoaded) {
-
+					long start = 0;
 					putput();
-					world.update(Time.deltaTime/1000.0f);
+					start = System.currentTimeMillis();
+					world.update(Time.deltaTime / 1000.0f);
+					if (showTimes) {
+						System.out.println("entity update time consumption:"
+								+ (System.currentTimeMillis() - start) + "ms");
+					}
 					world.updateAIs();
 					player.usePerspective();
 					glBindTexture(GL_TEXTURE_2D, 0);
 					glClear(GL_COLOR_BUFFER_BIT);
+					start = System.currentTimeMillis();
 					world.draw(player);
+					if (showTimes) {
+						System.out.println("Render time consumption:"
+								+ (System.currentTimeMillis() - start) + "ms");
+					}
 				} else {
 					glBindTexture(GL_TEXTURE_2D, 0);
 					glClear(GL_COLOR_BUFFER_BIT);
@@ -286,7 +307,9 @@ public class Main {
 							Display.getWidth() / 2 - 50,
 							Display.getHeight() / 2 + 40);
 					player.usePerspective();
+					long start = System.currentTimeMillis();
 					world.draw(player);
+					// System.out.println(System.currentTimeMillis()-start+"ms");
 				}
 				// ARBShaderObjects.glUseProgramObjectARB(0);
 
@@ -299,25 +322,28 @@ public class Main {
 			// String[]{"trotcycle_left.gif","trotcycle_right.gif"});
 			Time.updateFPS();
 
-			Display.sync(200);
+			 Display.sync(200);
 			// System.out.println(player.getVelocity());
 		}
 		Display.destroy();
 		// System.exit(0);
 	}
+
 	private static long lastFPSUpdate = 0;
 	private static int lastFPS = 0;
-	public void updateGUI(){
+
+	public void updateGUI() {
 		if (world.isFirstLoaded) {
 			GUI.updateStats();
 			long t = System.currentTimeMillis();
-			if (lastFPSUpdate+1000 < t) {
+			if (lastFPSUpdate + 1000 < t) {
 				lastFPS = Time.fps;
 				lastFPSUpdate = t;
 			}
 			Text.drawTextOnDisplay("FPS: " + lastFPS);
 		}
 	}
+
 	public void drawGUI() {
 		if (world.isFirstLoaded) {
 			player.inventory.draw();
@@ -342,9 +368,10 @@ public class Main {
 		if (Controls.isBackwardPressed) {
 			player.moveDown();
 		}
-		if(Controls.isInventoryPressed){
-			if(!Controls.isInventoryPressedLastFrame){
-				player.inventory.setInForeground(!player.inventory.isInForeground());
+		if (Controls.isInventoryPressed) {
+			if (!Controls.isInventoryPressedLastFrame) {
+				player.inventory.setInForeground(!player.inventory
+						.isInForeground());
 			}
 		}
 		if (Controls.isPPressed) {
@@ -356,6 +383,11 @@ public class Main {
 				l1.setLightIntensity(1f);
 				l1.setRange(10);
 				world.lights.add(l1);
+			}
+		}
+		if (Controls.isRedoPressed) {
+			if (!Controls.isRedoPressedLastFrame) {
+				showTimes = !showTimes;
 			}
 		}
 		if (Controls.isCPressed) {

@@ -49,13 +49,22 @@ import org.qwertzimus.phyltoisus.world.*;
  20.:
  */
 public class Entity implements Renderable {
-	private List<Force> forces = new ArrayList<Force>(); // A list of all the forces
+	private List<Force> forces = new ArrayList<Force>(); // A list of all the
+															// forces
 	private Force gravity = Gravity.getGravity(); // The Gravity Force
-	private Force fly = new Force(new Vector2f(0, 5f), false); // The force upwards when flying
-	private Force hover = new Force(new Vector2f(0, 8f), false); // The force upwards when falling (lower than gravity)
-	private Force jumpFlyMode = new Force(new Vector2f(0, 2f*70), false);
-	private Force jump = new Force(new Vector2f(0, 10f*70), false);
-	
+	private Force fly = new Force(new Vector2f(0, 5f), false); // The force
+																// upwards when
+																// flying
+	private Force hover = new Force(new Vector2f(0, 8f), false); // The force
+																	// upwards
+																	// when
+																	// falling
+																	// (lower
+																	// than
+																	// gravity)
+	private Force jumpFlyMode = new Force(new Vector2f(0, 2f * 70), false);
+	private Force jump = new Force(new Vector2f(0, 10f * 70), false);
+
 	Vector2f position;
 	Vector2f velocity;
 	Vector2f rotation;
@@ -91,7 +100,7 @@ public class Entity implements Renderable {
 		this.forces.add(this.hover);
 		this.forces.add(this.jump);
 		this.forces.add(this.jumpFlyMode);
-		
+
 		vertexBufferId = -1;
 		textureBufferId = -1;
 		position = new Vector2f();
@@ -113,7 +122,7 @@ public class Entity implements Renderable {
 	public float getMaxVelocityX() {
 		return maxVelocityX;
 	}
-	
+
 	public float getMaxVelocityY() {
 		return maxVelocityY;
 	}
@@ -480,8 +489,9 @@ public class Entity implements Renderable {
 	}
 
 	public void moveUp() {
-		if (!canFly) return;
-		//velocity.y += 2700 * Time.deltaTime / 1000f;
+		if (!canFly)
+			return;
+		// velocity.y += 2700 * Time.deltaTime / 1000f;
 		fly.setEnabled(true);
 		isAcceleratingY = true;
 		isFlying = true;
@@ -690,57 +700,62 @@ public class Entity implements Renderable {
 	}
 
 	public void loadAnimations() {
-		long t=System.currentTimeMillis();
-		long c=0;
+		long t = System.currentTimeMillis();
+		long c = 0;
 		for (String s : animation.keySet()) {
 			Animation a = animation.get(s);
 			if (!a.isLoaded) {
 				a.loadAnimation();
-				c=System.currentTimeMillis();
+				c = System.currentTimeMillis();
 			}
 		}
-		if(c!=0)System.out.println(c-t);
+		if (c != 0)
+			System.out.println(c - t);
 	}
 
 	public synchronized void update(float dt) {
+		long start = System.currentTimeMillis();
 		// TODO- anti-clipping measures
 		adjustVelocity();
 		float oldX = position.x;
 		float oldY = position.y;
 		float finalX = oldX;
 		float finalY = oldY;
-		
+
 		loadAnimations();
-		
+
 		inChunk = Main.world.getChunk(getChunkX(), getChunkY());
 		if (inChunk != null) {
 			this.hover.setEnabled(canFly);
 			for (Force force : this.forces) {
-				if (!force.isEnabled()) continue;
-				this.velocity.x += force.getDirection().x*dt;
-				this.velocity.y += force.getDirection().y*dt;
+				if (!force.isEnabled())
+					continue;
+				this.velocity.x += force.getDirection().x * dt;
+				this.velocity.y += force.getDirection().y * dt;
 			}
-			
+
 			finalX = this.position.x + this.velocity.x;
 			finalY = this.position.y + this.velocity.y;
-			
-			inChunk = Main.world.getChunk(getChunkX(new Vector2f(oldX,
-					finalY)), getChunkY(new Vector2f(oldX, finalY)));
+
+			inChunk = Main.world.getChunk(
+					getChunkX(new Vector2f(oldX, finalY)),
+					getChunkY(new Vector2f(oldX, finalY)));
 			updateCollider(new Vector2f(oldX, finalY));
-			
+
 			if (hasWorldCollisionUp(new Vector2f(finalX, finalY))) {
 				finalY = oldY;
 				this.velocity.y = 0;
 			}
-			
-			inChunk = Main.world.getChunk(getChunkX(new Vector2f(oldX,
-					finalY)), getChunkY(new Vector2f(oldX, finalY)));
+
+			inChunk = Main.world.getChunk(
+					getChunkX(new Vector2f(oldX, finalY)),
+					getChunkY(new Vector2f(oldX, finalY)));
 			updateCollider(new Vector2f(oldX, finalY));
-			
+
 			if (hasWorldCollisionDown(new Vector2f(oldX, finalY))) {
 				finalY = oldY;
 				this.velocity.y = 0;
-				
+
 				isOnGround = true;
 				if (!isInHoverMode)
 					isFlying = false;
@@ -749,30 +764,33 @@ public class Entity implements Renderable {
 				if (isInHoverMode)
 					isFlying = true;
 			}
-			
-			inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
-					oldY)), getChunkY(new Vector2f(finalX, oldY)));
+
+			inChunk = Main.world.getChunk(
+					getChunkX(new Vector2f(finalX, oldY)),
+					getChunkY(new Vector2f(finalX, oldY)));
 			updateCollider(new Vector2f(finalX, oldY));
 			if (hasWorldCollisionLeft(new Vector2f(finalX, oldY))) {
 				finalX = oldX;
 				this.velocity.x = 0;
 			}
-			
-			inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
-					oldY)), getChunkY(new Vector2f(finalX, oldY)));
+
+			inChunk = Main.world.getChunk(
+					getChunkX(new Vector2f(finalX, oldY)),
+					getChunkY(new Vector2f(finalX, oldY)));
 			updateCollider(new Vector2f(finalX, oldY));
 
 			if (hasWorldCollisionRight(new Vector2f(finalX, oldY))) {
 				finalX = oldX;
 				this.velocity.x = 0;
 			}
-			
+
 			setPosition(finalX, finalY);
-			
-			inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
-					finalY)), getChunkY(new Vector2f(finalX, finalY)));
+
+			inChunk = Main.world.getChunk(
+					getChunkX(new Vector2f(finalX, finalY)),
+					getChunkY(new Vector2f(finalX, finalY)));
 			updateCollider(new Vector2f(finalX, finalY));
-			
+
 			if (this.isOnGround && !this.isAcceleratingX) {
 				this.velocity.x = this.velocity.x * this.fraction;
 			}
@@ -780,110 +798,76 @@ public class Entity implements Renderable {
 			this.fly.setEnabled(false);
 			this.jump.setEnabled(false);
 			this.jumpFlyMode.setEnabled(false);
-			
+
 			statusUpdate();
-			
+
+//			System.out.println("entity physics update time"
+//					+ (System.currentTimeMillis() - start) + "ms");
+			start = System.currentTimeMillis();
 			animate1();
+//			System.out.println("entity animation update time"
+//					+ (System.currentTimeMillis() - start) + "ms");
 		}
 
-
-		/*try {
-			inChunk = Main.world.getChunk(getChunkX(), getChunkY());
-			if (inChunk != null) {
-				
-				loadAnimations();
-
-				float newX = (position.x + velocity.x * Time.deltaTime / 1000f);
-				float newY = (position.y + velocity.y * Time.deltaTime / 1000f);
-				finalY = newY;
-				inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
-						finalY)), getChunkY(new Vector2f(finalX, finalY)));
-				updateCollider(new Vector2f(finalX, finalY));
-				if (hasWorldCollisionUp(new Vector2f(finalX, finalY))) {
-					finalY = oldY;
-					velocity.y = 0;
-					// System.out.println("hasCollisionUP");
-
-					// isFlying = false;
-				} else {
-
-					// isFlying = true;
-				}
-				inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
-						finalY)), getChunkY(new Vector2f(finalX, finalY)));
-				updateCollider(new Vector2f(finalX, finalY));
-				if (hasWorldCollisionDown(new Vector2f(finalX, finalY))) {
-					finalY = oldY;
-					velocity.y = 0;
-					// System.out.println("hasCollisionDOWN");
-					isOnGround = true;
-					if (!isInHoverMode)
-						isFlying = false;
-				} else {
-					isOnGround = false;
-					if (isInHoverMode)
-						isFlying = true;
-				}
-
-				finalX = newX;
-				inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
-						finalY)), getChunkY(new Vector2f(finalX, finalY)));
-				updateCollider(new Vector2f(finalX, finalY));
-				if (hasWorldCollisionLeft(new Vector2f(finalX, finalY))) {
-					finalX = oldX;
-					velocity.x = 0;
-					// System.out.println("hasCollisionLEFT");
-				}
-				inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
-						finalY)), getChunkY(new Vector2f(finalX, finalY)));
-				updateCollider(new Vector2f(finalX, finalY));
-
-				if (hasWorldCollisionRight(new Vector2f(finalX, finalY))) {
-					finalX = oldX;
-					velocity.x = 0;
-					// System.out.println("hasCollisionRIGHT");
-				}
-				setPosition(finalX, finalY);
-				inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
-						finalY)), getChunkY(new Vector2f(finalX, finalY)));
-				updateCollider(new Vector2f(finalX, finalY));
-
-				// setTextureId(texture.get(0).get(0).getTextureID());
-				statusUpdate();
-
-				if (!isAcceleratingX) {
-					velocity.x = velocity.x * fraction;
-					if (isOnGround) {
-						velocity.x = velocity.x * fraction;
-					}
-				}
-				if (!isAcceleratingY) {
-					velocity.y = velocity.y * fraction;
-					if (!isInHoverMode) {
-						gravi();
-					}
-				}
-				isAcceleratingX = false;
-				isAcceleratingY = false;
-				// setTextureId(animation.get(0).getFrame(5).getTextureID());
-				animate1();
-
-			} else {
-				// float oldX = position.x;
-				// float oldY = position.y;
-				// float newX = (position.x + velocity.x * Time.deltaTime /
-				// 1000f);
-				// float newY = (position.y + velocity.y * Time.deltaTime /
-				// 1000f);
-				// position.x = newX;
-				// position.y = newY;
-			}
-
-		} catch (Exception e) {
-			position.x = oldX;
-			position.y = oldY;
-			// System.out.println(e);
-		}*/
+		/*
+		 * try { inChunk = Main.world.getChunk(getChunkX(), getChunkY()); if
+		 * (inChunk != null) {
+		 * 
+		 * loadAnimations();
+		 * 
+		 * float newX = (position.x + velocity.x * Time.deltaTime / 1000f);
+		 * float newY = (position.y + velocity.y * Time.deltaTime / 1000f);
+		 * finalY = newY; inChunk = Main.world.getChunk(getChunkX(new
+		 * Vector2f(finalX, finalY)), getChunkY(new Vector2f(finalX, finalY)));
+		 * updateCollider(new Vector2f(finalX, finalY)); if
+		 * (hasWorldCollisionUp(new Vector2f(finalX, finalY))) { finalY = oldY;
+		 * velocity.y = 0; // System.out.println("hasCollisionUP");
+		 * 
+		 * // isFlying = false; } else {
+		 * 
+		 * // isFlying = true; } inChunk = Main.world.getChunk(getChunkX(new
+		 * Vector2f(finalX, finalY)), getChunkY(new Vector2f(finalX, finalY)));
+		 * updateCollider(new Vector2f(finalX, finalY)); if
+		 * (hasWorldCollisionDown(new Vector2f(finalX, finalY))) { finalY =
+		 * oldY; velocity.y = 0; // System.out.println("hasCollisionDOWN");
+		 * isOnGround = true; if (!isInHoverMode) isFlying = false; } else {
+		 * isOnGround = false; if (isInHoverMode) isFlying = true; }
+		 * 
+		 * finalX = newX; inChunk = Main.world.getChunk(getChunkX(new
+		 * Vector2f(finalX, finalY)), getChunkY(new Vector2f(finalX, finalY)));
+		 * updateCollider(new Vector2f(finalX, finalY)); if
+		 * (hasWorldCollisionLeft(new Vector2f(finalX, finalY))) { finalX =
+		 * oldX; velocity.x = 0; // System.out.println("hasCollisionLEFT"); }
+		 * inChunk = Main.world.getChunk(getChunkX(new Vector2f(finalX,
+		 * finalY)), getChunkY(new Vector2f(finalX, finalY)));
+		 * updateCollider(new Vector2f(finalX, finalY));
+		 * 
+		 * if (hasWorldCollisionRight(new Vector2f(finalX, finalY))) { finalX =
+		 * oldX; velocity.x = 0; // System.out.println("hasCollisionRIGHT"); }
+		 * setPosition(finalX, finalY); inChunk =
+		 * Main.world.getChunk(getChunkX(new Vector2f(finalX, finalY)),
+		 * getChunkY(new Vector2f(finalX, finalY))); updateCollider(new
+		 * Vector2f(finalX, finalY));
+		 * 
+		 * // setTextureId(texture.get(0).get(0).getTextureID());
+		 * statusUpdate();
+		 * 
+		 * if (!isAcceleratingX) { velocity.x = velocity.x * fraction; if
+		 * (isOnGround) { velocity.x = velocity.x * fraction; } } if
+		 * (!isAcceleratingY) { velocity.y = velocity.y * fraction; if
+		 * (!isInHoverMode) { gravi(); } } isAcceleratingX = false;
+		 * isAcceleratingY = false; //
+		 * setTextureId(animation.get(0).getFrame(5).getTextureID());
+		 * animate1();
+		 * 
+		 * } else { // float oldX = position.x; // float oldY = position.y; //
+		 * float newX = (position.x + velocity.x * Time.deltaTime / // 1000f);
+		 * // float newY = (position.y + velocity.y * Time.deltaTime / //
+		 * 1000f); // position.x = newX; // position.y = newY; }
+		 * 
+		 * } catch (Exception e) { position.x = oldX; position.y = oldY; //
+		 * System.out.println(e); }
+		 */
 	}
 
 	public float getFraction() {
@@ -1150,8 +1134,7 @@ public class Entity implements Renderable {
 							.get("hover_right.gif").size() * 80) {
 						animationStartTime = System.currentTimeMillis();
 					}
-					for (int i = 0; i < animation.get("hover_right.gif")
-							.size(); i++) {
+					for (int i = 0; i < animation.get("hover_right.gif").size(); i++) {
 						if (System.currentTimeMillis() - animationStartTime > (80 * i)) {
 							setTextureId(animation.get("hover_right.gif")
 									.getFrame(i).getTextureID());
@@ -1226,8 +1209,7 @@ public class Entity implements Renderable {
 							.get("hover_left.gif").size() * 80) {
 						animationStartTime = System.currentTimeMillis();
 					}
-					for (int i = 0; i < animation.get("hover_left.gif")
-							.size(); i++) {
+					for (int i = 0; i < animation.get("hover_left.gif").size(); i++) {
 						if (System.currentTimeMillis() - animationStartTime > (80 * i)) {
 							setTextureId(animation.get("hover_left.gif")
 									.getFrame(i).getTextureID());
@@ -1361,14 +1343,13 @@ public class Entity implements Renderable {
 	}
 
 	public void draw() {
-		if (isReady) 
-		{
+		if (isReady) {
 			System.out.println("awdad");
 			GL11.glPushMatrix();
-			GL11.glTranslatef((int) position.x, (int) position.y, 0);
-			
+//			GL11.glTranslatef((int) position.x, (int) position.y, 0);
+
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-			
+
 			GL11.glTexParameteri(GL11.GL_TEXTURE_2D,
 					GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 			GL11.glTexParameteri(GL11.GL_TEXTURE_2D,
@@ -1382,10 +1363,8 @@ public class Entity implements Renderable {
 			ARBVertexBufferObject.glBindBufferARB(
 					ARBVertexBufferObject.GL_ARRAY_BUFFER_ARB, textureBufferId);
 			GL11.glTexCoordPointer(2, GL11.GL_FLOAT, 0, 0);
-			if (inChunk != null) {		
-				ARBShaderObjects.glUniform1fARB(
-						Main.baseLightValueLoc,
-						0.9f);
+			if (inChunk != null) {
+				ARBShaderObjects.glUniform1fARB(Main.baseLightValueLoc, 0.9f);
 
 			}
 			System.out.println(Main.baseLightValueLoc);

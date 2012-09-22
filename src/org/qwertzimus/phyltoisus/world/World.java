@@ -22,7 +22,7 @@ public class World implements IWorld {
 	List<EntityController> entityController;
 	FloatBuffer diffuse, ambient;
 	public static int chunkUpdates = 20;
-	public static int worldUpdaterSleepTime = 20;
+	public static int worldUpdaterSleepTime = 1;
 	public static String worldPath = "./saves/world01/";
 	public static long worldSeed = Long.valueOf("4684131546864462");
 	public static boolean isFirstLoaded;
@@ -31,8 +31,9 @@ public class World implements IWorld {
 	public static List<LightSource> lights;
 	public static boolean isServer = false;
 	public static LightHandler lightHandler;
+
 	public World() {
-		
+
 		objects = new ArrayList<Renderable>();
 		entities = new ArrayList<Entity>();
 		entityController = new ArrayList<EntityController>();
@@ -42,7 +43,7 @@ public class World implements IWorld {
 		if (!f.exists()) {
 			f.mkdirs();
 		}
-		lightHandler=new LightHandler(lights);
+		lightHandler = new LightHandler(lights);
 		System.out.println(worldSeed);
 	}
 
@@ -81,16 +82,56 @@ public class World implements IWorld {
 
 			}
 		}
-		for(int i=0;i<chunks.length;i++){
-			for(int k=0;k<chunks.length;k++){
+		for (int i = 0; i < chunks.length; i++) {
+			for (int k = 0; k < chunks.length; k++) {
 				chunks[k][i].getLightMap().updateLightBuffer();
 				chunks[k][i].getLightMap().bindBuffer();
 			}
 		}
 		if (!isServer) {
-			lightHandler.start();
+			final Chunk[][] chunksA = chunks;
+			Thread t1 = new Thread(new Runnable() {
+				public void run() {
+					while (true) {
+
+						updateLights1(0, lights.size());
+						try {
+							Thread.sleep(1);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			});
+			t1.setDaemon(true);
+			t1.start();
+
+			Thread t2 = new Thread(new Runnable() {
+				public void run() {
+					while (true) {
+						updateLightMapsMaybe(chunksA);
+						try {
+							Thread.sleep(30);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			});
+			t2.setDaemon(true);
+			t2.start();
 		}
 		System.out.println("initalised");
+	}
+
+	public synchronized void updateLightMapsMaybe(Chunk[][] chunks) {
+		for (int i = 0; i < chunks.length; i++) {
+			for (int k = 0; k < chunks.length; k++) {
+				chunks[k][i].updateLightMapMaybe();
+			}
+		}
 	}
 
 	public Chunk getChunk(float x, float y) {
@@ -253,10 +294,16 @@ public class World implements IWorld {
 	}
 
 	public void update(float dt) {
-		for (Entity e : entities) {
-			e.update(dt);
+		long start = System.currentTimeMillis();
+		for (int i = 0; i < entities.size(); i++) {
+			entities.get(i).update(dt);
+
 		}
-		updateLights(0, lights.size());
+		if (Main.showTimes) {
+			System.out.println("entity update time"
+					+ (System.currentTimeMillis() - start) + "ms");
+
+		}
 	}
 
 	public void updateAIs() {
@@ -266,7 +313,7 @@ public class World implements IWorld {
 	}
 
 	// 50176 49152
-	// TODO	This is being called a lot and takes a lot of resources too;
+	// TODO This is being called a lot and takes a lot of resources too;
 	public synchronized void loadWorldParts(Entity e, int id) {
 		Chunk[][] chunks = chunkE.get(id);
 		int diffX = 0, diffY = 0;
@@ -288,8 +335,8 @@ public class World implements IWorld {
 
 					chunks[k][i].loadChunk();
 					chunks[k][i].setNeedsBufferUpdate(true);
-//					chunks[k][i].updateBuffer();
-//					chunks[k][i].setRebind(true);
+					// chunks[k][i].updateBuffer();
+					// chunks[k][i].setRebind(true);
 					// System.out.println("update");
 				} else if ((diffX = (int) (e.getPosition().x - chunks[k][i]
 						.getPosition().x)) > 3072) {
@@ -306,8 +353,8 @@ public class World implements IWorld {
 							chunks[k][i].getPosition().y);
 					chunks[k][i].loadChunk();
 					chunks[k][i].setNeedsBufferUpdate(true);
-//					chunks[k][i].updateBuffer();
-//					chunks[k][i].setRebind(true);
+					// chunks[k][i].updateBuffer();
+					// chunks[k][i].setRebind(true);
 					// System.out.println("update");
 
 				}
@@ -325,8 +372,8 @@ public class World implements IWorld {
 							chunks[k][i].getPosition().y - 3840);
 					chunks[k][i].loadChunk();
 					chunks[k][i].setNeedsBufferUpdate(true);
-//					chunks[k][i].updateBuffer();
-//					chunks[k][i].setRebind(true);
+					// chunks[k][i].updateBuffer();
+					// chunks[k][i].setRebind(true);
 					// System.out.println("update");
 
 				} else if ((diffY = (int) (e.getPosition().y - chunks[k][i]
@@ -343,14 +390,14 @@ public class World implements IWorld {
 							chunks[k][i].getPosition().y + 3840);
 					chunks[k][i].loadChunk();
 					chunks[k][i].setNeedsBufferUpdate(true);
-//					chunks[k][i].updateBuffer();
-//					chunks[k][i].markDirty();
-//					chunks[k][i].setRebind(true);
+					// chunks[k][i].updateBuffer();
+					// chunks[k][i].markDirty();
+					// chunks[k][i].setRebind(true);
 					// System.out.println(chunks[k][i].getBlock(0, 0,
 					// 0).getId());
 
 				}
-				if(!chunks[k][i].isReady()||chunks[k][i].needsBufferUpdate()){
+				if (!chunks[k][i].isReady() || chunks[k][i].needsBufferUpdate()) {
 					chunks[k][i].updateBuffer();
 				}
 			}
@@ -362,15 +409,13 @@ public class World implements IWorld {
 			Chunk[][] chunks = chunkE.get(bö);
 			for (int i = 0; i < chunks.length; i++) {
 				for (int k = 0; k < chunks.length; k++) {
-
 					chunks[k][i].saveChunk();
-
 				}
 			}
 		}
 	}
 
-	public synchronized void updateLights(int start, int end) {
+	public synchronized void updateLights1(int start, int end) {
 		if (end > lights.size())
 			end = lights.size();
 		for (int i = start; i < end; i++) {
@@ -378,28 +423,28 @@ public class World implements IWorld {
 		}
 	}
 
-	public synchronized void forceUpdateLights() {
-		for (LightSource ls : lights) {
-			ls.setForceUpdate(true);
-			ls.updateBlocks();
-			ls.setForceUpdate(false);
-			try {
-				Thread.sleep(1);
-			} catch (Exception e) {
-				System.out.println(e);
-			}
-
-		}
-	}
+	// public synchronized void forceUpdateLights() {
+	// for (LightSource ls : lights) {
+	// ls.setForceUpdate(true);
+	// ls.updateBlocks();
+	// ls.setForceUpdate(false);
+	// try {
+	// Thread.sleep(1);
+	// } catch (Exception e) {
+	// System.out.println(e);
+	// }
+	//
+	// }
+	// }
 
 	public void draw(Entity e) {
 		Chunk[][] chunks = chunkE.get(0);
 		ARBShaderObjects.glUseProgramObjectARB(Main.shaderId);
 		int loc = ARBShaderObjects.glGetUniformLocationARB(Main.shaderId,
 				"texure");
-//		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		// GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, Textures.texture1.getTextureID());
-//		ARBShaderObjects.glUniform1iARB(loc, GL13.GL_ACTIVE_TEXTURE);
+		// ARBShaderObjects.glUniform1iARB(loc, GL13.GL_ACTIVE_TEXTURE);
 		light = ARBShaderObjects.glGetUniformLocationARB(Main.shaderId,
 				"lightValue");
 
@@ -409,14 +454,16 @@ public class World implements IWorld {
 				GL11.GL_NEAREST);
 		int updates = 0;
 		// System.out.println("start loop");
+
 		for (int i = 0; i < chunks.length; i++) {
 			for (int k = 0; k < chunks.length; k++) {
 				if (updates < chunkUpdates && !chunks[k][i].isReady()
-						||chunks[k][i].needsLightMapUpdate()
-						||chunks[k][i].needsRebind()) {
-					
+						|| chunks[k][i].needsLightMapRebind()
+						|| chunks[k][i].needsRebind()) {
+
 					chunks[k][i].rebindBufferMaybe();
 					chunks[k][i].rebindLightMapMaybe();
+					updates++;
 				}
 
 				if (Math.abs(Main.player.getPosition().x

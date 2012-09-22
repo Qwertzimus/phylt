@@ -27,7 +27,7 @@ public class Block {
 	public void setId(int id) {
 		this.id = id;
 		updateStatus();
-		updateLightValue(World.getLights());
+//		updateLightValue(World.getLights());
 		inChunk.markDirty();
 	}
 
@@ -37,7 +37,6 @@ public class Block {
 		float curLightValue=0;
 		for (LightSource ls : lights) {
 			if((curLightValue=ls.getLightValue(this))>lightValue){
-				ls.addBlock(this);
 				lightValue=curLightValue;
 			}
 		}
@@ -72,7 +71,7 @@ public class Block {
 			isSolid = false;
 		}
 		if (inChunk != null) {
-			updateLightValue(World.getLights());
+//			updateLightValue(World.getLights());
 			inChunk.markDirty();
 
 		}

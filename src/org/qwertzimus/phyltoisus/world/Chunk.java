@@ -23,9 +23,9 @@ public class Chunk implements Renderable {
 	Block[][][] block;
 	FloatBuffer vertices, textures;
 	int vertexBufferId, textureBufferId;
-	boolean isReady, shouldBeSaved, updateLightMap, rebind,needsBufferUpdate;
+	boolean isReady, shouldBeSaved, updateLightMap, rebind, needsBufferUpdate;
 	int biomeType;
-	Chunk chu[]; //Chunks which surround this Chunk
+	Chunk chu[]; // Chunks which surround this Chunk
 	Entity belongsTo;
 	LightMap lightMap;
 
@@ -43,6 +43,7 @@ public class Chunk implements Renderable {
 	}
 
 	public void init() {
+		updateLightMap = true;
 		for (int i = 0; i < 5; i++) {
 			for (int k = 0; k < 16; k++) {
 				for (int j = 0; j < 16; j++) {
@@ -57,7 +58,7 @@ public class Chunk implements Renderable {
 		if (textureBufferId == -1) {
 			textureBufferId = ARBVertexBufferObject.glGenBuffersARB();
 		}
-		updateLightMap();
+		updateLightMapMaybe();
 	}
 
 	public void setAllBlocksTo(int id) {
@@ -75,26 +76,33 @@ public class Chunk implements Renderable {
 		return block;
 	}
 
-	public void setNeedsBufferUpdate(boolean needsBufferUpdate){
-		this.needsBufferUpdate=needsBufferUpdate;
+	public void setNeedsBufferUpdate(boolean needsBufferUpdate) {
+		this.needsBufferUpdate = needsBufferUpdate;
 	}
+
 	public boolean needsRebind() {
 		return rebind;
 	}
 
-	public void setRebind(boolean rebind) {
+	public boolean needsLightMapRebind(){
+		return lightMap.rebind();
+	}
+	public synchronized void setRebind(boolean rebind) {
 		this.rebind = rebind;
 	}
 
-	public synchronized void updateLightMap() {
-		lightMap.updateLightBuffer();
+	public synchronized void updateLightMapMaybe() {
+		if (needsLightMapUpdate()) {
+			setUpdateLightMap(false);
+			lightMap.updateLightBuffer();
+		}
 	}
 
 	public boolean needsLightMapUpdate() {
 		return updateLightMap;
 	}
 
-	public void setUpdateLightMap(boolean updateLightMap) {
+	public synchronized void setUpdateLightMap(boolean updateLightMap) {
 		this.updateLightMap = updateLightMap;
 	}
 
@@ -389,7 +397,7 @@ public class Chunk implements Renderable {
 	}
 
 	public synchronized void updateBuffer() {
-		rebind=false;
+		rebind = false;
 		try {
 			vertices.clear();
 			textures.clear();
@@ -421,7 +429,7 @@ public class Chunk implements Renderable {
 		// ARBVertexBufferObject.glDeleteBuffersARB(textureBufferId);
 
 		// System.out.println("updated");
-		needsBufferUpdate=false;
+		needsBufferUpdate = false;
 		rebind = true;
 	}
 
@@ -431,6 +439,7 @@ public class Chunk implements Renderable {
 
 	public void rebindBufferMaybe() {
 		if (rebind) {
+			setRebind(false);
 			ARBVertexBufferObject.glBindBufferARB(
 					ARBVertexBufferObject.GL_ARRAY_BUFFER_ARB, vertexBufferId);
 			ARBVertexBufferObject.glBufferDataARB(
@@ -450,16 +459,17 @@ public class Chunk implements Renderable {
 					ARBVertexBufferObject.GL_ARRAY_BUFFER_ARB, 0);
 
 			setReady(true);
-			rebind = false;
 		}
 	}
 
-	public boolean needsBufferUpdate(){
+	public boolean needsBufferUpdate() {
 		return needsBufferUpdate;
 	}
+
 	public void draw() {
-		if (Main.world.isFirstLoaded||isReady) {
-			if(lightMap.getLightValues()==null)System.out.println("notLOADED");
+		if (Main.world.isFirstLoaded || isReady) {
+			if (lightMap.getLightValues() == null)
+				System.out.println("notLOADED");
 			// GL11.glTranslatef(-position.x, -position.y, 0);
 
 			/*
@@ -493,6 +503,15 @@ public class Chunk implements Renderable {
 					ARBVertexBufferObject.GL_ARRAY_BUFFER_ARB, 0);
 			ARBVertexProgram.glDisableVertexAttribArrayARB(2);
 
+		}
+	}
+	public synchronized void updateLightValues(){
+		for(int i=0;i<5;i++){
+			for(int k=0;k<16;k++){
+				for(int j=0;j<16;j++){
+					block[j][k][i].updateLightValue(Main.world.getLights());
+				}
+			}
 		}
 	}
 }

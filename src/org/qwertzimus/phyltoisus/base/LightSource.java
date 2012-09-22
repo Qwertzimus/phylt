@@ -10,7 +10,7 @@ public interface LightSource {
 	void setPosition(Vector2f position);
 	Vector2f getPosition();
 	void updateBlocks();
-	void updateAffectedBlocks();
+//	void updateAffectedBlocks();
 	int getRange();
 	void setRange(int range);
 	boolean hasChanged();

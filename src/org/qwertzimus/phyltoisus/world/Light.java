@@ -44,7 +44,7 @@ public class Light implements LightSource {
 	}
 
 	public void setOldPosition(Vector2f oldPosition) {
-		this.oldPosition = oldPosition;
+		this.oldPosition.set(oldPosition);
 	}
 
 	public List<Block> getChangedBlocks() {
@@ -98,86 +98,27 @@ public class Light implements LightSource {
 	public Vector2f getPosition() {
 		return position;
 	}
-
-	public synchronized void updateAffectedBlocks(){
-		final List<Chunk> chunksToUpdate = new ArrayList<Chunk>();
-		for(Block b:blocks){
-			b.updateLightValue(World.getLights());
-			if (!chunksToUpdate.contains(b.getChunk())) {
-				chunksToUpdate.add(b.getChunk());
-				b.getChunk().setUpdateLightMap(true);
-			}
-		}
-		updateLightMaps(chunksToUpdate);
-	}
 	@Override
 	public synchronized void updateBlocks() {
-		if (Main.world.isFirstLoaded) {
-			// System.out.println("update started");
-			List<Block> thisBlocks = new ArrayList<Block>();
-			final List<Chunk> chunksToUpdate = new ArrayList<Chunk>();
-			if (hasChanged() || forceUpdate) {
-
-				for (Block b : changedBlocks) {
-					b.setLightValue(changedBlocksLightValue.get(0));
-					changedBlocksLightValue.remove(0);
-					if (!chunksToUpdate.contains(b)) {
-						chunksToUpdate.add(b.getChunk());
-						b.getChunk().setUpdateLightMap(true);
-					}
-				}
-				changedBlocks.clear();
-				changedBlocksLightValue.clear();
-				try {
-					for (int i = -range; i < range; i++) {
-						for (int k = -range; k < range; k++) {
-							Block b = Main.world.getBlock(
-									position.x + (k * 16), position.y
-											+ (i * 16));
-							if (b != null) {
-								float lI = lightIntensity
-										- (Math.abs((b.getPosition().x - position.x) / 16)
-												* Math.abs((b.getPosition().x - position.x) / 16) + Math
-												.abs((b.getPosition().y - position.y) / 16)
-												* Math.abs((b.getPosition().y - position.y) / 16))
-										/ 100;
-								if (lI > b.getLightValue()) {
-									if (!chunksToUpdate.contains(b)) {
-										chunksToUpdate.add(b.getChunk());
-										b.getChunk().setUpdateLightMap(true);
-									}
-									changedBlocks.add(b);
-									changedBlocksLightValue.add(b
-											.getLightValue());
-									b.setLightValue(lI);
-								}
-							}
+		if(World.isFirstLoaded){
+			if(hasChanged()){
+				range=(int)(lightIntensity*30);
+				for(int i=-range;i<range;i++){
+					for(int k=-range;k<range;k++){
+						Block b=Main.world.getBlock(position.x+(k*16), position.y+(i*16));
+						if(b!=null){
+							b.updateLightValue(Main.world.getLights());
 						}
 					}
-				} catch (Exception e) {
-					System.out.println("lightUpdate" + e);
 				}
-				updateLightMaps(chunksToUpdate);
-				/*if (thread == false) {
-					thread=true;
-					new Thread(new Runnable() {
-						public void run() {
-							updateLightMaps(chunksToUpdate);
-							thread=false;
-						}
-					}).start();
-				}*/
-				setHasChanged(false);
-				oldPosition.set(position);
-
+				setOldPosition(position);
 			}
 		}
-
 	}
 
-	public synchronized void updateLightMaps(final List<Chunk> chunks) {
+	public synchronized void updateLightMapsMaybe(final List<Chunk> chunks) {
 		for (Chunk chunk : chunks) {
-			chunk.updateLightMap();
+			chunk.updateLightMapMaybe();
 		}
 	}
 
@@ -186,7 +127,7 @@ public class Light implements LightSource {
 		return range;
 	}
 
-	// TODO- fix this
+	// TODO- fix this(but not here)
 	public synchronized boolean hasChanged() {
 		if (Math.floor(oldPosition.x / 16) * 16 != Math.floor(position.x / 16) * 16
 				|| Math.floor(oldPosition.y / 16) * 16 != Math
@@ -215,6 +156,15 @@ public class Light implements LightSource {
 						* Math.abs((b.getPosition().x - position.x) / 16) + Math
 						.abs((b.getPosition().y - position.y) / 16)
 						* Math.abs((b.getPosition().y - position.y) / 16))
+				/ 100;
+		return lI;
+	}
+	public float getLightValue(Vector2f position) {
+		float lI = lightIntensity
+				- (Math.abs((position.x - this.position.x) / 16)
+						* Math.abs((position.x - this.position.x) / 16) + Math
+						.abs((position.y - this.position.y) / 16)
+						* Math.abs((position.y - this.position.y) / 16))
 				/ 100;
 		return lI;
 	}
